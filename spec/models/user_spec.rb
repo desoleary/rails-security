@@ -26,6 +26,17 @@ RSpec.describe User, type: :model do
       expect(users.to_sql).to eql("SELECT `users`.* FROM `users` WHERE (username = 'admin\\' OR 1); -- ' AND password = '')")
       expect(users.count).to eql(0)
     end
+
+    it 'escapes another dangerous params' do
+
+      username = "admin' OR 1); -- "
+      password = ''
+
+
+      users = User.where(username: username, password: password)
+      expect(users.to_sql).to eql("SELECT `users`.* FROM `users` WHERE `users`.`username` = 'admin\\' OR 1); -- ' AND `users`.`password` = ''")
+      expect(users.count).to eql(0)
+    end
   end
 end
 

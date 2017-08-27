@@ -1,0 +1,9 @@
+<!--This method outputs without escaping a string-->
+<%= raw "<script>alert('raw does not escape input!!')</script>" %>
+
+<!--equivalent to raw method-->
+<%= "<script>alert('html_safe does not escape input!!')</script>".html_safe %>
+<!--does not escape-->
+<%= content_tag "<script>alert('content_tag does not escape input!!')</script>" %>
+
+<%= link_to 'Personal Website', "javascript:alert('links not so safe either :(')" %>
