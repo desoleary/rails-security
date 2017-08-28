@@ -1,3 +1,5 @@
+Use brakeman
+
 #### Command Injection
 
 > Do not use in web app or ensure 100% its not injectable if completely necessary
@@ -57,6 +59,105 @@ SELECT  "users".* FROM "users" WHERE (username = 'admin'' OR 1); -- ' AND passwo
 <a href="javascript:alert('links not so safe either :(')">Personal Website</a>
 ```
 
+**Sessions**
+
+```ruby
+Project::Application.config.session_store :active_record_store
+```
+
+**Authentication**
+- use Devise or AuthLogic
+
+```ruby
+class ProjectController < ApplicationController
+       before_filter :authenticate_user
+```
+
+```ruby
+config.password_length = 8..128
+```
+
+**Password Complexity**
+```ruby
+validate :password_complexity
+   def password_complexity
+      if password.present? and not password.match(/\A(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+\z/)
+          errors.add :password, "must include at least one lowercase letter, one uppercase letter, and one digit"
+      end
+   end
+```
+
+**Insecure Direct Object Reference or Forceful Browsing**
+> introduce Authorization (admin-only)
+
+**CSRF (Cross Site Request Forgery)**
+```ruby
+class ApplicationController < ActionController::Base
+       protect_from_forgery
+```
+
+**Mass Assignment and Strong Parameters**
+```ruby
+ class Project < ActiveRecord::Base
+       attr_accessible :name, :admin
+   end
+```
+
+[Strong Params](https://github.com/rails/strong_parameters)
+```ruby
+class PeopleController < ActionController::Base
+  # This will raise an ActiveModel::ForbiddenAttributes exception because it's using mass assignment
+  # without an explicit permit step.
+  def create
+    Person.create(params[:person])
+  end
+
+  # This will pass with flying colors as long as there's a person key in the parameters, otherwise
+  # it'll raise an ActionController::ParameterMissing exception, which will get caught by
+  # ActionController::Base and turned into that 400 Bad Request reply.
+  def update
+    person = current_account.people.find(params[:id])
+    person.update_attributes!(person_params)
+    redirect_to person
+  end
+
+  private
+    # Using a private method to encapsulate the permissible parameters is just a good pattern
+    # since you'll be able to reuse the same permit list between create and update. Also, you
+    # can specialize this method with per-user checking of permissible attributes.
+    def person_params
+      params.require(:person).permit(:name, :age)
+    end
+end
+```
+
+**Cross Origin Resource Sharing**
+
+```ruby
+gem 'rack-cors', :require => 'rack/cors'
+```
+**config/application.rb**
+
+```ruby
+module Sample
+       class Application < Rails::Application
+           config.middleware.use Rack::Cors do
+               allow do
+                   origins 'someserver.example.com'
+                   resource %r{/users/\d+.json},
+                       :headers => ['Origin', 'Accept', 'Content-Type'],
+                       :methods => [:post, :get]
+               end
+           end
+       end
+   end
+```
+
+**Encryption**
+
+```ruby
+config.stretches = Rails.env.test? ? 1 : 10
+```
 #### Session Guidelines
  - Do not store large objects in a session.
  - Use object references only preferably GUIDs
